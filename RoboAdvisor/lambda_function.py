@@ -1,6 +1,7 @@
 ### Required Libraries ###
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from botocore.vendored import requests
 
 ### Functionality Helper Functions ###
 def parse_int(n):
@@ -11,6 +12,26 @@ def parse_int(n):
         return int(n)
     except ValueError:
         return float("nan")
+
+
+def risk(risk_level):
+    """
+    Investment recommednation based on the selected risk level
+    """
+    if risk_level == "None":
+        rec = "100% bonds (AGG), 0% equities (SPY)"
+    elif risk_level == "Very Low":
+        rec = "80% bonds (AGG), 20% equities (SPY)"
+    elif risk_level == "Low":
+        rec = "60% bonds (AGG), 40% equities (SPY)"
+    elif risk_level == "Medium":
+        rec = "40% bonds (AGG), 60% equities (SPY)"
+    elif risk_level == "High":
+        rec = "20% bonds (AGG), 80% equities (SPY)"
+    else:
+        rec = "0% bonds (AGG), 100% equities (SPY)"
+
+    return rec
 
 
 def build_validation_result(is_valid, violated_slot, message_content):
@@ -25,6 +46,39 @@ def build_validation_result(is_valid, violated_slot, message_content):
         "violatedSlot": violated_slot,
         "message": {"contentType": "PlainText", "content": message_content},
     }
+
+
+def validate_data(age, investment_amount, intent_request):
+    """
+    Validates the data provided by the user.
+    """
+
+    # Validate that the user's age is under 65 years old
+    if age is not None:
+        age = parse_int(age)
+        if age > 64:
+            return build_validation_result(
+                False,
+                "age",
+                "You should be under the age of 65 to use this service, "
+                "please provide a different age.",
+            )
+
+    # Validate the investment amount, it should be >= 5000
+    if investment_amount is not None:
+        investment_amount = parse_int(
+            investment_amount
+        )  # Since parameters are strings it's important to cast values
+        if investment_amount < 5000:
+            return build_validation_result(
+                False,
+                "investmentAmount",
+                "The minimum investment amount is 5,000 USD to use this service, "
+                "please provide a greater amount.",
+            )
+
+    # A True results is returned if age or amount are valid
+    return build_validation_result(True, None, None)
 
 
 ### Dialog Actions Helper Functions ###
@@ -96,10 +150,20 @@ def recommend_portfolio(intent_request):
         # Perform basic validation on the supplied input slots.
         # Use the elicitSlot dialog action to re-prompt
         # for the first violation detected.
-
-        ### YOUR DATA VALIDATION CODE STARTS HERE ###
-
-        ### YOUR DATA VALIDATION CODE ENDS HERE ###
+        
+        slots = get_slots(intent_request)
+        validation_result = validate_data(age, investment_amount, intent_request)
+        
+        if not validation_result["isValid"]:
+            slots[validation_result["violatedSlot"]] = None
+            
+            return elicit_slot(
+                intent_request["sessionAttributes"],
+                intent_request["currentIntent"]["name"],
+                slots,
+                validation_result["violatedSlot"],
+                validation_result["message"],
+            )
 
         # Fetch current session attibutes
         output_session_attributes = intent_request["sessionAttributes"]
@@ -108,9 +172,7 @@ def recommend_portfolio(intent_request):
 
     # Get the initial investment recommendation
 
-    ### YOUR FINAL INVESTMENT RECOMMENDATION CODE STARTS HERE ###
-
-    ### YOUR FINAL INVESTMENT RECOMMENDATION CODE ENDS HERE ###
+    initial_recommendation = risk(risk_level)
 
     # Return a message with the initial recommendation based on the risk level.
     return close(
