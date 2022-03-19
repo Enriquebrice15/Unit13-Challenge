@@ -2,9 +2,7 @@
 
 ## Robo Advisor for Retirement Plans
 
-![Robot](Images/robot.jpg)
-
-_Photo by [Alex Knight](https://www.pexels.com/@alex-knight-1272316?utm_content=attributionCopyText&utm_medium=referral&utm_source=pexels) from [Pexels](https://www.pexels.com/photo/high-angle-photo-of-robot-2599244/?utm_content=attributionCopyText&utm_medium=referral&utm_source=pexels) | [Free License](https://www.pexels.com/photo-license/)_
+![Robot](https://d1e00ek4ebabms.cloudfront.net/production/cc592f9b-5a1c-40f1-b000-9c810523a5c6.jpg)
 
 ### Background
 
